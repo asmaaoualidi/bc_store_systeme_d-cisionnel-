@@ -1,0 +1,23 @@
+# Environnements Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Fichiers de données sensibles / lourds (à ne jamais pousser)
+*.db
+*.sqlite
+dwh.db
+*.csv
+
+# Identifiants (si jamais un fichier de config est ajouté)
+.env
+config.ini
+secrets.json
+
+# Fichiers temporaires OS
+.DS_Store
+Thumbs.db
+
+# Power BI cache local
+*.pbix.bak
