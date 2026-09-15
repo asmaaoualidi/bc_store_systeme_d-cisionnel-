@@ -1,0 +1,96 @@
+@startuml activite
+!theme plain
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam activity {
+  BackgroundColor #EAF0FA
+  BorderColor #2F5496
+  DiamondBackgroundColor #FDF1DC
+  DiamondBorderColor #8A5C00
+  FontSize 12
+}
+
+title Diagramme d'activité — Processus décisionnel ERP SaaS
+
+start
+
+:Extraction des données;
+note right
+  Sources :
+  - MongoDB
+  - PostgreSQL
+end note
+
+:Nettoyage et contrôle des données;
+
+if (Données valides ?) then (non)
+  :Identifier les anomalies;
+  :Corriger les données;
+  note right
+    Corrections appliquées :
+    - Statut de paiement (bug ETL)
+    - Harmonisation billing_cycle
+    - Regroupement des modules
+  end note
+  :Recontrôler les données;
+else (oui)
+  :Transformer les données;
+  :Harmoniser les modules\n(module_group);
+  :Normaliser les statuts\npar domaine;
+  :Calculer les indicateurs\nde qualité;
+endif
+
+:Charger dans le\nData Warehouse MySQL;
+:Alimenter les dimensions;
+:Alimenter les tables de faits;
+
+fork
+  partition "Module 1 — Churn" {
+    :Construire les snapshots\ntemporels mensuels;
+    :Calculer les variables\n(feature engineering);
+    :Entraîner et comparer\nles modèles;
+    :Sélectionner Random Forest\n(AUC = 0,806);
+    :Prédire le risque de churn\npar entreprise;
+  }
+fork again
+  partition "Module 2 — Popularité" {
+    :Calculer la part relative\ndes modules;
+    :Comparer naïf / moyenne mobile\n/ régression linéaire;
+    :Sélectionner le meilleur\nmodèle par module;
+    :Prévoir la popularité\nà 3 mois;
+  }
+fork again
+  partition "Module 3 — Revenu" {
+    :Décomposer le revenu\n(entreprises × ARPU);
+    :Comparer 5 modèles\n(validation walk-forward);
+    if (MAE relative <= 30 % ?) then (oui)
+      :Retenir la prévision chiffrée;
+    else (non — MAE = 48,4 %)
+      :Écarter la prévision chiffrée;
+      note right
+        Aucun modèle n'atteint
+        le seuil de fiabilité
+        → analyse descriptive
+        uniquement
+      end note
+    endif
+  }
+end fork
+
+:Charger les résultats\nanalytiques dans MySQL;
+:Construire le tableau\nde bord Power BI;
+
+fork
+  :Vue globale du portefeuille;
+fork again
+  :Prédiction du churn;
+fork again
+  :Popularité des modules;
+end fork
+
+:Analyser les résultats;
+:Prendre une décision;
+
+stop
+
+@enduml

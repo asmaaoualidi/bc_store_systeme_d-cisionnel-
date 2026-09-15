@@ -1,0 +1,132 @@
+@startuml mcd
+!theme plain
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #EAF0FA
+  BorderColor #2F5496
+  FontSize 11
+}
+hide circle
+
+title Modèle dimensionnel — Data Warehouse ERP SaaS\n(schéma en étoile, avec normalisation partielle de dim_plan)
+
+' ==================== DIMENSIONS ====================
+entity "dim_company" as company {
+  * **company_key** : BIGINT <<PK>>
+  --
+  source_id : TEXT
+  source_system : TEXT
+  name : TEXT
+  email : TEXT
+  created_at : DATETIME
+  updated_at : DATETIME
+}
+
+entity "dim_module" as module {
+  * **module_key** : BIGINT <<PK>>
+  --
+  source_id : TEXT
+  source_system : TEXT
+  name : VARCHAR(255)
+  description : TEXT
+  created_at : DATETIME
+}
+
+entity "dim_plan" as plan {
+  * **plan_key** : BIGINT <<PK>>
+  --
+  module_key : BIGINT <<FK>>
+  name : VARCHAR(255)
+  billing_cycle : TEXT
+  duration_days : BIGINT
+  price : DOUBLE
+  discount_percent : DOUBLE
+  source_id : TEXT
+  source_system : TEXT
+}
+
+entity "dim_status" as status {
+  * **status_key** : BIGINT <<PK>>
+  --
+  status_domain : TEXT
+  status_code : TEXT
+  status_label : TEXT
+}
+
+entity "dim_date" as date {
+  * **date_key** : BIGINT <<PK>>
+  --
+  full_date : DATE
+  day : BIGINT
+  month : BIGINT
+  month_name : TEXT
+  year : BIGINT
+  quarter : BIGINT
+  day_of_week : BIGINT
+  is_weekend : BIGINT
+}
+
+' ==================== TABLES DE FAITS ====================
+entity "fact_subscription" as subscription #FDF1DC {
+  * **subscription_key** : BIGINT <<PK>>
+  --
+  company_key : BIGINT <<FK>>
+  plan_key : BIGINT <<FK>>
+  module_key : BIGINT <<FK>>
+  status_key : BIGINT <<FK>>
+  start_date_key : BIGINT <<FK>>
+  end_date_key : BIGINT <<FK>>
+  --
+  duration_days : BIGINT
+  duration_gap_days : BIGINT
+  duration_outlier_flag : BOOLEAN
+}
+
+entity "fact_payment" as payment #FDF1DC {
+  * **payment_key** : BIGINT <<PK>>
+  --
+  subscription_key : BIGINT <<FK>>
+  company_key : BIGINT <<FK>>
+  status_key : BIGINT <<FK>>
+  paid_date_key : BIGINT <<FK>>
+  --
+  amount : DOUBLE
+  created_at : DATETIME
+}
+
+entity "fact_notification" as notification #FDF1DC {
+  * **notification_key** : BIGINT <<PK>>
+  --
+  company_key : BIGINT <<FK>>
+  status_key : BIGINT <<FK>>
+  date_key : BIGINT <<FK>>
+  --
+  is_read : BIGINT
+  notif_type_raw : TEXT
+  created_at : DATETIME
+}
+
+' ==================== RELATIONS ====================
+' Cardinalités : 1 ligne de dimension --> N lignes de faits
+
+company     ||--o{ subscription   : possède
+plan        ||--o{ subscription   : souscrit
+module      ||--o{ subscription   : concerne
+status      ||--o{ subscription   : statut
+date        ||--o{ subscription   : début / fin
+
+subscription ||--o{ payment       : génère
+company      ||--o{ payment       : effectue
+status       ||--o{ payment       : statut
+date         ||--o{ payment       : date paiement
+
+company      ||--o{ notification  : reçoit
+status       ||--o{ notification  : statut
+date         ||--o{ notification  : date envoi
+
+' Normalisation partielle (flocon) : une dimension référence une autre
+module       ||--o{ plan          : décline en
+
+@enduml

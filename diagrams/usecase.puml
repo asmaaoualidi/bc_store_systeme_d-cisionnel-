@@ -1,0 +1,66 @@
+@startuml usecase
+!theme plain
+skinparam backgroundColor white
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #EAF0FA
+  BorderColor #2F5496
+  FontSize 12
+}
+skinparam actor {
+  BorderColor #2F5496
+  FontSize 12
+}
+left to right direction
+
+actor "Data Analyst" as DA
+actor "Décideur\n(Direction)" as DEC
+
+rectangle "Système décisionnel ERP SaaS" {
+
+  ' --- Cas d'utilisation du Data Analyst (chaîne de traitement) ---
+  usecase "Extraire les données\ndes sources" as UC1
+  usecase "Nettoyer et transformer\nles données" as UC2
+  usecase "Contrôler la qualité\ndes données" as UC3
+  usecase "Alimenter le\nData Warehouse" as UC4
+  usecase "Entraîner les\nmodèles prédictifs" as UC5
+  usecase "Générer les scores\nde prédiction" as UC6
+
+  ' --- Cas d'utilisation du Décideur (consultation) ---
+  usecase "Consulter le\ndashboard Power BI" as UC7
+  usecase "Analyser les\nabonnements" as UC8
+  usecase "Identifier les entreprises\nà risque de churn" as UC9
+  usecase "Consulter la popularité\ndes modules" as UC10
+  usecase "Analyser le\nchiffre d'affaires" as UC11
+  usecase "Filtrer par entreprise,\nmodule ou période" as UC12
+}
+
+' --- Associations acteur / cas d'utilisation ---
+DA --> UC1
+DA --> UC2
+DA --> UC3
+DA --> UC4
+DA --> UC5
+DA --> UC6
+
+DEC --> UC7
+DEC --> UC8
+DEC --> UC9
+DEC --> UC10
+DEC --> UC11
+
+' --- Relations <<include>> : sous-fonctions OBLIGATOIRES ---
+' Chaque consultation passe nécessairement par le dashboard
+UC8  ..> UC7 : <<include>>
+UC9  ..> UC7 : <<include>>
+UC10 ..> UC7 : <<include>>
+UC11 ..> UC7 : <<include>>
+
+' Le filtrage fait partie intégrante de la consultation
+UC7  ..> UC12 : <<include>>
+
+' Le contrôle qualité est une étape obligatoire du nettoyage
+UC2  ..> UC3 : <<include>>
+
+@enduml
